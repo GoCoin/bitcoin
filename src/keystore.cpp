@@ -59,3 +59,33 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     return false;
 }
 
+// S.M. Added these for being able to use externally calculated signatures (signrawtransaction)
+
+bool CBasicKeyStore::AddCSingleSigner(CSingleSigner& signer) {
+    LOCK(cs_KeyStore);
+    mapSigners[signer.GetPubKey().GetID()] = signer;
+    return true;
+}
+
+bool CBasicKeyStore::HaveCSingleSigner(const CKeyID& address, const uint256& toSign) const {
+    bool hasSingleSigner = false;
+    {
+        LOCK(cs_KeyStore);
+        SignerMap::const_iterator si = mapSigners.find(address);
+        hasSingleSigner = (si != mapSigners.end()) && ((*si).second.GetHashToSign() == toSign);
+    }
+    return hasSingleSigner;
+}
+
+bool CBasicKeyStore::GetCSingleSigner(const CKeyID& address, const uint256& toSign, CSingleSigner& signer) const {
+    bool hasSingleSigner = false;
+    {
+        LOCK(cs_KeyStore);
+        SignerMap::const_iterator si = mapSigners.find(address);
+        hasSingleSigner = (si != mapSigners.end()) && ((*si).second.GetHashToSign() == toSign);
+        if (hasSingleSigner) signer = (*si).second;
+    }
+    return hasSingleSigner;
+}
+
+

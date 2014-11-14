@@ -170,6 +170,24 @@ public:
     bool Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
 };
 
+// S.M. Added for new functionality of signrawtransaction
+// A class that only knows how to sign a single piece of data
+class CSingleSigner
+{
+private:
+    CPubKey pubKey;
+    uint256 hashToSign;
+    std::vector<unsigned char> sigR;
+    std::vector<unsigned char> sigS;
+
+public:
+    CSingleSigner();
+    CSingleSigner(const CPubKey& pubKeyVal, uint256 hashToSignVal, std::vector<unsigned char>& sigRVal, std::vector<unsigned char>& sigSVal);
+    bool Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) const;
+    CPubKey GetPubKey() const;
+    uint256 GetHashToSign() const;
+};
+
 
 // secure_allocator is defined in allocators.h
 // CPrivKey is a serialized private key, with all parameters included (279 bytes)

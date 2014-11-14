@@ -262,6 +262,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getrawtransaction",      &getrawtransaction,      false,     false,      false },
     { "sendrawtransaction",     &sendrawtransaction,     false,     false,      false },
     { "signrawtransaction",     &signrawtransaction,     false,     false,      false }, /* uses wallet if enabled */
+    { "getdatatosign",          &getdatatosign,          false,     false,      false }, // S.M. Added for new RPC call
 
     /* Utility functions */
     { "createmultisig",         &createmultisig,         true,      true ,      false },
