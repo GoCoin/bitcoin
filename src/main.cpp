@@ -115,17 +115,17 @@ namespace {
     // Sources of received blocks, to be able to send them reject messages or ban
     // them, if processing happens afterwards. Protected by cs_main.
     map<uint256, NodeId> mapBlockSource;
-
-    // Blocks that are in flight, and that are in the queue to be downloaded.
-    // Protected by cs_main.
-    struct QueuedBlock {
-        uint256 hash;
-        int64_t nTime;  // Time of "getdata" request in microseconds.
-        int nQueuedBefore;  // Number of blocks in flight at the time of request.
-    };
-    map<uint256, pair<NodeId, list<QueuedBlock>::iterator> > mapBlocksInFlight;
-    map<uint256, pair<NodeId, list<uint256>::iterator> > mapBlocksToDownload;
 }
+
+// Blocks that are in flight, and that are in the queue to be downloaded.
+// Protected by cs_main.
+struct QueuedBlock {
+    uint256 hash;
+    int64_t nTime;  // Time of "getdata" request in microseconds.
+    int nQueuedBefore;  // Number of blocks in flight at the time of request.
+};
+map<uint256, pair<NodeId, list<QueuedBlock>::iterator> > mapBlocksInFlight;
+map<uint256, pair<NodeId, list<uint256>::iterator> > mapBlocksToDownload;
 
 //////////////////////////////////////////////////////////////////////////////
 //

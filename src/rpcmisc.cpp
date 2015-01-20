@@ -85,6 +85,10 @@ Value getinfo(const Array& params, bool fHelp)
 #endif
     obj.push_back(Pair("relayfee",      ValueFromAmount(CTransaction::nMinRelayTxFee)));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+
+    obj.push_back(Pair("blocksinflight",   (int)mapBlocksInFlight.size()));
+    obj.push_back(Pair("blockstodownload", (int)mapBlocksToDownload.size()));
+    
     return obj;
 }
 
