@@ -30,6 +30,20 @@ using namespace boost::assign;
 using namespace json_spirit;
 using namespace std;
 
+struct CDataToSign
+{
+public:
+    uint256 prevTxHash;
+    unsigned int vout;
+    CScript scriptPubKey;
+    CScript redeemScript;
+    CPubKey pubKey;
+    uint256 hashToSign;
+    std::vector<unsigned char> sigR;
+    std::vector<unsigned char> sigS;
+};
+
+
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex)
 {
     txnouttype type;
@@ -783,11 +797,11 @@ Value getdatatosign(const Array& params, bool fHelp)
 
     // Fetch previous transactions outputs (this tx's inputs):
     CCoinsView viewDummy;
-    CCoinsViewCache view(viewDummy);
+    CCoinsViewCache view(&viewDummy);
     {
         LOCK(mempool.cs);
         CCoinsViewCache &viewChain = *pcoinsTip;
-        CCoinsViewMemPool viewMempool(viewChain, mempool);
+        CCoinsViewMemPool viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
         BOOST_FOREACH(const CTxIn& txin, mergedTx.vin) {
@@ -978,3 +992,63 @@ Value sendrawtransaction(const Array& params, bool fHelp)
 
     return hashTx.GetHex();
 }
+
+
+void DataToSignToJSON(const std::vector<CDataToSign> vToSign, Array& out)
+{
+    for (unsigned int i = 0; i < vToSign.size(); i++)
+    {
+        Object dToSignObj;
+        const CDataToSign& dToSign = vToSign[i];
+
+        dToSignObj.push_back(Pair("txid", dToSign.prevTxHash.GetHex()));
+        dToSignObj.push_back(Pair("vout", (boost::int64_t)dToSign.vout));
+        dToSignObj.push_back(Pair("scriptPubKey", HexStr(dToSign.scriptPubKey.begin(), dToSign.scriptPubKey.end())));
+        if (!dToSign.redeemScript.empty())
+            dToSignObj.push_back(Pair("redeemScript", HexStr(dToSign.redeemScript.begin(), dToSign.redeemScript.end())));
+
+        dToSignObj.push_back(Pair("tosign", dToSign.hashToSign.GetReverseHex()));
+        dToSignObj.push_back(Pair("pubkey", HexStr(dToSign.pubKey.begin(), dToSign.pubKey.end())));
+        dToSignObj.push_back(Pair("r", HexStr(dToSign.sigR.begin(), dToSign.sigR.end())));
+        dToSignObj.push_back(Pair("s", HexStr(dToSign.sigS.begin(), dToSign.sigS.end())));
+
+        txnouttype type;
+        std::vector<CTxDestination> addresses;
+        int nRequired;
+
+        if (ExtractDestinations(dToSign.scriptPubKey, type, addresses, nRequired))
+        {
+            /*
+            Array a;
+            BOOST_FOREACH(const CTxDestination& addr, addresses)
+                a.push_back(CBitcoinAddress(addr).ToString());
+            */
+
+            switch (type)
+            {
+            case TX_NONSTANDARD:
+                break;
+            case TX_PUBKEY:
+                break;
+            case TX_PUBKEYHASH:
+                dToSignObj.push_back(Pair("address", CBitcoinAddress(addresses[0]).ToString()));
+                break;
+            case TX_SCRIPTHASH:
+                break;
+            case TX_MULTISIG:
+                break;
+            case TX_NULL_DATA:
+                break;
+            }
+
+            // We should format the response so that reqSigs would always be 1, so no need to add it
+            //dToSignObj.push_back(Pair("reqSigs", nRequired));
+        }
+
+        dToSignObj.push_back(Pair("type", GetTxnOutputType(type)));
+
+        out.push_back(dToSignObj);
+    }
+}
+
+
