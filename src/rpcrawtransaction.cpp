@@ -43,6 +43,8 @@ public:
     std::vector<unsigned char> sigS;
 };
 
+void DataToSignToJSON(const std::vector<CDataToSign> vToSign, Array& out);
+
 
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex)
 {
@@ -897,7 +899,7 @@ Value getdatatosign(const Array& params, bool fHelp)
         if (fHashSingle && (i >= mergedTx.vout.size()))
             continue;
 
-        CTxIn& txin = mergedTx.vin[i];
+        const CTxIn& txin = mergedTx.vin[i];
         CCoins coins;
         if (!view.GetCoins(txin.prevout.hash, coins) || !coins.IsAvailable(txin.prevout.n))
             continue;
