@@ -219,3 +219,62 @@ bool ECC_InitSanityCheck() {
     CPubKey pubkey = key.GetPubKey();
     return key.VerifyPubKey(pubkey);
 }
+
+
+CSingleSigner::CSingleSigner() {
+    // Nothing to do
+}
+
+CSingleSigner::CSingleSigner(const CPubKey& pubKeyVal, uint256 hashToSignVal,
+        std::vector<unsigned char>& sigRVal, std::vector<unsigned char>& sigSVal) {
+    pubKey = pubKeyVal;
+    hashToSign = hashToSignVal;
+    sigR = sigRVal;
+    sigS = sigSVal;
+}
+
+bool CSingleSigner::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
+
+    if (hash != hashToSign)
+    {
+        std::string errorStr("This signer only knows how to sign: ");
+        errorStr = errorStr.append(hashToSign.GetHex()).append(", and so cannot sign: ").append(hash.GetHex());
+        throw std::runtime_error(errorStr);
+    }
+
+    if (sigR.size() != 32 || sigS.size() != 32)
+    {
+        std::string errorStr("Either R or S is not set properly. ");
+        errorStr = errorStr.append("R: ").append(HexStr(sigR.begin(), sigR.end()));
+        errorStr = errorStr.append("S: ").append(HexStr(sigS.begin(), sigS.end()));
+        throw std::runtime_error(errorStr);
+    }
+
+    int extraR = sigR[0] > 0x7F ? 1 : 0;
+    int extraS = sigS[0] > 0x7F ? 1 : 0;
+    int len = 68 + extraR + extraS;
+
+    // DER encoding of R and S
+    vchSig.push_back((unsigned char) 0x30);
+    vchSig.push_back((unsigned char) len);
+
+    vchSig.push_back((unsigned char) 0x02);
+    vchSig.push_back((unsigned char) (32 + extraR));
+    if (extraR != 0) vchSig.push_back((unsigned char) 0x00);
+    vchSig.insert(vchSig.end(), sigR.begin(), sigR.end());
+
+    vchSig.push_back((unsigned char) 0x02);
+    vchSig.push_back((unsigned char) (32 + extraS));
+    if (extraS != 0) vchSig.push_back((unsigned char) 0x00);
+    vchSig.insert(vchSig.end(), sigS.begin(), sigS.end());
+
+    return true;
+}
+
+CPubKey CSingleSigner::GetPubKey() const {
+    return pubKey;
+}
+
+uint256 CSingleSigner::GetHashToSign() const {
+    return hashToSign;
+}
