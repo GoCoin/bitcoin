@@ -86,3 +86,33 @@ bool CBasicKeyStore::HaveWatchOnly() const
     LOCK(cs_KeyStore);
     return (!setWatchOnly.empty());
 }
+
+
+// S.M. Added these for being able to use externally calculated signatures (signrawtransaction)
+
+bool CBasicKeyStore::AddCSingleSigner(CSingleSigner& signer) {
+    LOCK(cs_KeyStore);
+    mapSigners[std::make_pair(signer.GetPubKey().GetID(), signer.GetHashToSign())] = signer;
+    return true;
+}
+
+bool CBasicKeyStore::HaveCSingleSigner(const CKeyID& address, const uint256& toSign) const {
+    bool hasSingleSigner = false;
+    {
+        LOCK(cs_KeyStore);
+        SignerMap::const_iterator si = mapSigners.find(std::make_pair(address, toSign));
+        hasSingleSigner = (si != mapSigners.end()) && ((*si).second.GetHashToSign() == toSign);
+    }
+    return hasSingleSigner;
+}
+
+bool CBasicKeyStore::GetCSingleSigner(const CKeyID& address, const uint256& toSign, CSingleSigner& signer) const {
+    bool hasSingleSigner = false;
+    {
+        LOCK(cs_KeyStore);
+        SignerMap::const_iterator si = mapSigners.find(std::make_pair(address, toSign));
+        hasSingleSigner = (si != mapSigners.end()) && ((*si).second.GetHashToSign() == toSign);
+        if (hasSingleSigner) signer = (*si).second;
+    }
+    return hasSingleSigner;
+}
