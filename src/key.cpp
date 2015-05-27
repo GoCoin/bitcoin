@@ -12,6 +12,7 @@
 
 #include <secp256k1.h>
 #include "ecwrapper.h"
+#include "util.h"
 
 //! anonymous namespace
 namespace {
