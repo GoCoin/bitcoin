@@ -17,7 +17,7 @@ class CPubKey;
 
 struct CExtPubKey;
 
-/** 
+/**
  * secp256k1:
  * const unsigned int PRIVATE_KEY_SIZE = 279;
  * const unsigned int PUBLIC_KEY_SIZE  = 65;
@@ -112,7 +112,7 @@ public:
 
     /**
      * Convert the private key to a CPrivKey (serialized OpenSSL private key data).
-     * This is expensive. 
+     * This is expensive.
      */
     CPrivKey GetPrivKey() const;
 
@@ -176,5 +176,24 @@ struct CExtKey {
 
 /** Check that required EC support is available at runtime */
 bool ECC_InitSanityCheck(void);
+
+// S.M. Added for new functionality of signrawtransaction
+// A class that only knows how to sign a single piece of data
+class CSingleSigner
+{
+private:
+    CPubKey pubKey;
+    uint256 hashToSign;
+    std::vector<unsigned char> sigR;
+    std::vector<unsigned char> sigS;
+
+public:
+    CSingleSigner();
+    CSingleSigner(const CPubKey& pubKeyVal, uint256 hashToSignVal, std::vector<unsigned char>& sigRVal, std::vector<unsigned char>& sigSVal);
+    bool Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) const;
+    CPubKey GetPubKey() const;
+    uint256 GetHashToSign() const;
+};
+
 
 #endif // BITCOIN_KEY_H
