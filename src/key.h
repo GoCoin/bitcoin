@@ -9,6 +9,7 @@
 #include "allocators.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "pubkey.h"
 
 #include <stdexcept>
 #include <vector>
