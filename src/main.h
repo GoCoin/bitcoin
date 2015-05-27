@@ -562,8 +562,8 @@ protected:
 
 
 struct QueuedBlock;
-extern map<uint256, pair<NodeId, list<QueuedBlock>::iterator> > mapBlocksInFlight;
-extern map<uint256, pair<NodeId, list<uint256>::iterator> > mapBlocksToDownload;
+extern std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight;
+extern std::map<uint256, std::pair<NodeId, std::list<uint256>::iterator> > mapBlocksToDownload;
 
 
 #endif // BITCOIN_MAIN_H
