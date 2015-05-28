@@ -68,7 +68,6 @@ struct QueuedBlock {
 	int64_t nTime;  //! Time of "getdata" request in microseconds.
 	int nValidatedQueuedBefore;  //! Number of blocks queued with validated headers (globally) at the time this one is requested.
 	bool fValidatedHeaders;  //! Whether this block has validated headers at the time of request.
-	int nQueuedBefore;  // Number of blocks in flight at the time of request.
 };
 
 struct COrphanTx {
