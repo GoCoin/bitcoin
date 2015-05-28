@@ -3,6 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <stdint.h>
+#include <boost/assign/list_of.hpp>
+
 #include "base58.h"
 #include "primitives/transaction.h"
 #include "core_io.h"
@@ -19,9 +22,6 @@
 #include "wallet.h"
 #endif
 
-#include <stdint.h>
-
-#include <boost/assign/list_of.hpp>
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 
