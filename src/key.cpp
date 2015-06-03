@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "key.h"
+#include <secp256k1.h>
 
+#include "key.h"
 #include "crypto/hmac_sha512.h"
 #include "crypto/rfc6979_hmac_sha256.h"
 #include "eccryptoverify.h"
 #include "pubkey.h"
 #include "random.h"
-
-#include <secp256k1.h>
 #include "ecwrapper.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 //! anonymous namespace
 namespace {
