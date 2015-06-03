@@ -312,6 +312,9 @@ public:
     //! Retrieve the CCoins (unspent transaction outputs) for a given txid
     virtual bool GetCoins(const uint256 &txid, CCoins &coins) const;
 
+    // Modify the CCoins for a given txid
+    virtual bool SetCoins(const uint256 &txid, CCoins &coins) const;
+
     //! Just check whether we have data for a given txid.
     //! This may (but cannot always) return true for fully spent transactions
     virtual bool HaveCoins(const uint256 &txid) const;
@@ -389,7 +392,6 @@ public:
 
     // Standard CCoinsView methods
     bool GetCoins(const uint256 &txid, CCoins &coins) const;
-    bool SetCoins(const uint256 &txid, const CCoins &coins);
     bool HaveCoins(const uint256 &txid) const;
     uint256 GetBestBlock() const;
     void SetBestBlock(const uint256 &hashBlock);
