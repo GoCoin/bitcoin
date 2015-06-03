@@ -45,6 +45,11 @@ public:
     virtual bool RemoveWatchOnly(const CScript &dest) =0;
     virtual bool HaveWatchOnly(const CScript &dest) const =0;
     virtual bool HaveWatchOnly() const =0;
+
+    // S.M. For being able to use externally calculated signatures (signrawtransaction)
+    virtual bool AddCSingleSigner(CSingleSigner& signer) =0;
+    virtual bool HaveCSingleSigner(const CKeyID& address, const uint256& toSign) const =0;
+    virtual bool GetCSingleSigner(const CKeyID& address, const uint256& toSign, CSingleSigner& signer) const =0;
 };
 
 typedef std::map<CKeyID, CKey> KeyMap;
