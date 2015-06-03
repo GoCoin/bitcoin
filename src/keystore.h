@@ -50,6 +50,7 @@ public:
 typedef std::map<CKeyID, CKey> KeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
 typedef std::set<CScript> WatchOnlySet;
+typedef std::map<std::pair<CKeyID, uint256>, CSingleSigner> SignerMap;
 
 /** Basic key store, that keeps keys in an address->secret map */
 class CBasicKeyStore : public CKeyStore
@@ -58,6 +59,7 @@ protected:
     KeyMap mapKeys;
     ScriptMap mapScripts;
     WatchOnlySet setWatchOnly;
+    SignerMap mapSigners;
 
 public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
@@ -108,7 +110,8 @@ public:
     // S.M. For being able to use externally calculated signatures (signrawtransaction)
     virtual bool AddCSingleSigner(CSingleSigner& signer);
     virtual bool HaveCSingleSigner(const CKeyID& address, const uint256& toSign) const;
-    virtual bool GetCSingleSigner(const CKeyID& address, const uint256& toSign, CSingleSigner& signer) const;};
+    virtual bool GetCSingleSigner(const CKeyID& address, const uint256& toSign, CSingleSigner& signer) const;
+};
 
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
 typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > CryptedKeyMap;
