@@ -15,6 +15,9 @@
 #include <string>
 #include <vector>
 
+#include "pubkey.h"
+#include "uint256.h"
+
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 
 template <typename T>
@@ -382,17 +385,33 @@ public:
     CScript(int64_t b)        { operator<<(b); }
 
     explicit CScript(opcodetype b)     { operator<<(b); }
+    explicit CScript(const uint256& b) { operator<<(b); }
     explicit CScript(const CScriptNum& b) { operator<<(b); }
     explicit CScript(const std::vector<unsigned char>& b) { operator<<(b); }
 
 
     CScript& operator<<(int64_t b) { return push_int64(b); }
 
+    CScript& operator<<(const uint256& b)
+    {
+        insert(end(), sizeof(b));
+        insert(end(), (unsigned char*)&b, (unsigned char*)&b + sizeof(b));
+        return *this;
+    }
+
     CScript& operator<<(opcodetype opcode)
     {
         if (opcode < 0 || opcode > 0xff)
             throw std::runtime_error("CScript::operator<<() : invalid opcode");
         insert(end(), (unsigned char)opcode);
+        return *this;
+    }
+
+    CScript& operator<<(const CPubKey& key)
+    {
+        assert(key.size() < OP_PUSHDATA1);
+        insert(end(), (unsigned char)key.size());
+        insert(end(), key.begin(), key.end());
         return *this;
     }
 
