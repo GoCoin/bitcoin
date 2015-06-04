@@ -118,7 +118,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
     return false;
 }
 
-bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL)
+bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType /* =SIGHASH_ALL */, bool printHash /*=false */)
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
@@ -157,7 +157,7 @@ bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutabl
     return VerifyScript(txin.scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&txTo, nIn));
 }
 
-bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL)
+bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType/* =SIGHASH_ALL */, bool printHash /* =false */)
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
@@ -231,8 +231,9 @@ static CScript CombineMultisig(const CScript& scriptPubKey, const CTransaction& 
     return result;
 }
 
-CScript CombineSignatures(const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, const CScript& scriptSig1, const CScript& scriptSig2)
-{
+static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn,
+                                 const txnouttype txType, const vector<valtype>& vSolutions,
+                                 vector<valtype>& sigs1, vector<valtype>& sigs2){
     switch (txType)
     {
     case TX_NONSTANDARD:
