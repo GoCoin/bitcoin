@@ -60,16 +60,6 @@ CFeeRate minRelayTxFee = CFeeRate(1000);
 
 CTxMemPool mempool(::minRelayTxFee);
 
-// Blocks that are in flight, and that are in the queue to be downloaded.
-// Protected by cs_main.
-struct QueuedBlock {
-	uint256 hash;
-	CBlockIndex *pindex;  //! Optional.
-	int64_t nTime;  //! Time of "getdata" request in microseconds.
-	int nValidatedQueuedBefore;  //! Number of blocks queued with validated headers (globally) at the time this one is requested.
-	bool fValidatedHeaders;  //! Whether this block has validated headers at the time of request.
-};
-
 struct COrphanTx {
     CTransaction tx;
     NodeId fromPeer;
@@ -139,10 +129,6 @@ namespace {
      */
     map<uint256, NodeId> mapBlockSource;
 
-    /** Blocks that are in flight, and that are in the queue to be downloaded. Protected by cs_main. */
-//    std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight;
-//	std::map<uint256, std::pair<NodeId, std::list<uint256>::iterator> > mapBlocksToDownload;
-
     /** Number of blocks in flight with validated headers. */
     int nQueuedValidatedHeaders = 0;
 
@@ -155,6 +141,18 @@ namespace {
     /** Dirty block file entries. */
     set<int> setDirtyFileInfo;
 } // anon namespace
+
+// Blocks that are in flight, and that are in the queue to be downloaded.
+// Protected by cs_main.
+struct QueuedBlock {
+	uint256 hash;
+	CBlockIndex *pindex;  //! Optional.
+	int64_t nTime;  //! Time of "getdata" request in microseconds.
+	int nValidatedQueuedBefore;  //! Number of blocks queued with validated headers (globally) at the time this one is requested.
+	bool fValidatedHeaders;  //! Whether this block has validated headers at the time of request.
+};
+map<uint256, pair<NodeId, list<QueuedBlock>::iterator> > mapBlocksInFlight;
+map<uint256, pair<NodeId, list<uint256>::iterator> > mapBlocksToDownload;
 
 
 //////////////////////////////////////////////////////////////////////////////
