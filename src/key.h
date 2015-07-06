@@ -9,11 +9,10 @@
 #include "allocators.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "pubkey.h"
 
 #include <stdexcept>
 #include <vector>
-
-class CPubKey;
 
 struct CExtPubKey;
 
@@ -32,6 +31,24 @@ struct CExtPubKey;
  * CPrivKey is a serialized private key, with all parameters included (279 bytes)
  */
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
+
+// S.M. Added for new functionality of signrawtransaction
+// A class that only knows how to sign a single piece of data
+class CSingleSigner
+{
+private:
+    CPubKey pubKey;
+    uint256 hashToSign;
+    std::vector<unsigned char> sigR;
+    std::vector<unsigned char> sigS;
+
+public:
+    CSingleSigner();
+    CSingleSigner(const CPubKey& pubKeyVal, uint256 hashToSignVal, std::vector<unsigned char>& sigRVal, std::vector<unsigned char>& sigSVal);
+    bool Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) const;
+    CPubKey GetPubKey() const;
+    uint256 GetHashToSign() const;
+};
 
 /** An encapsulated private key. */
 class CKey

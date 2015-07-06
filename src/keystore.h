@@ -45,8 +45,14 @@ public:
     virtual bool RemoveWatchOnly(const CScript &dest) =0;
     virtual bool HaveWatchOnly(const CScript &dest) const =0;
     virtual bool HaveWatchOnly() const =0;
+
+    // S.M. For being able to use externally calculated signatures (signrawtransaction)
+    virtual bool AddCSingleSigner(CSingleSigner& signer) =0;
+    virtual bool HaveCSingleSigner(const CKeyID& address, const uint256& toSign) const =0;
+    virtual bool GetCSingleSigner(const CKeyID& address, const uint256& toSign, CSingleSigner& signer) const =0;
 };
 
+typedef std::map<std::pair<CKeyID, uint256>, CSingleSigner> SignerMap;
 typedef std::map<CKeyID, CKey> KeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
 typedef std::set<CScript> WatchOnlySet;
@@ -55,6 +61,7 @@ typedef std::set<CScript> WatchOnlySet;
 class CBasicKeyStore : public CKeyStore
 {
 protected:
+    SignerMap mapSigners;
     KeyMap mapKeys;
     ScriptMap mapScripts;
     WatchOnlySet setWatchOnly;
@@ -104,6 +111,11 @@ public:
     virtual bool RemoveWatchOnly(const CScript &dest);
     virtual bool HaveWatchOnly(const CScript &dest) const;
     virtual bool HaveWatchOnly() const;
+
+    // S.M. For being able to use externally calculated signatures (signrawtransaction)
+    virtual bool AddCSingleSigner(CSingleSigner& signer);
+    virtual bool HaveCSingleSigner(const CKeyID& address, const uint256& toSign) const;
+    virtual bool GetCSingleSigner(const CKeyID& address, const uint256& toSign, CSingleSigner& signer) const;
 };
 
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;

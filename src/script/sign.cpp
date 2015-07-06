@@ -19,16 +19,34 @@ typedef vector<unsigned char> valtype;
 
 bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
 {
-    CKey key;
-    if (!keystore.GetKey(address, key))
+    vector<unsigned char> vchSig;
+    bool success = false;
+
+    CSingleSigner signer;
+    if (keystore.GetCSingleSigner(address, hash, signer))
+    {
+        if (!signer.Sign(hash, vchSig))
+            return false;
+        success = true;
+    }
+
+    if (!success) {
+        CKey key;
+        if (keystore.GetKey(address, key))
+        {
+            if (!key.Sign(hash, vchSig))
+                return false;
+            success = true;
+        }
+    }
+
+    if (!success)
         return false;
 
-    vector<unsigned char> vchSig;
-    if (!key.Sign(hash, vchSig))
-        return false;
     vchSig.push_back((unsigned char)nHashType);
     scriptSigRet << vchSig;
 
+    // At end of this method, scriptSigRet has the DER encoded signature and the hash type, no pub key yet
     return true;
 }
 
@@ -62,6 +80,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
         return false;
 
     CKeyID keyID;
+    CPubKey pub;
     switch (whichTypeRet)
     {
     case TX_NONSTANDARD:
@@ -74,12 +93,18 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
         keyID = CKeyID(uint160(vSolutions[0]));
         if (!Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
             return false;
+
+        if (keystore.HaveCSingleSigner(keyID, hash))
+        {
+            CSingleSigner signer;
+            keystore.GetCSingleSigner(keyID, hash, signer);
+            pub = signer.GetPubKey();
+        }
         else
         {
-            CPubKey vch;
-            keystore.GetPubKey(keyID, vch);
-            scriptSigRet << ToByteVector(vch);
+            keystore.GetPubKey(keyID, pub);
         }
+        scriptSigRet << ToByteVector(pub);
         return true;
     case TX_SCRIPTHASH:
         return keystore.GetCScript(uint160(vSolutions[0]), scriptSigRet);
@@ -91,7 +116,8 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
     return false;
 }
 
-bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
+// S.M. added extra parameter to log hash for debugging
+bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType, bool printHash)
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
@@ -99,6 +125,8 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
     uint256 hash = SignatureHash(fromPubKey, txTo, nIn, nHashType);
+
+    if (printHash) { std::cout << "signrawtransaction hash: " << hash.GetReverseHex() << std::endl; }
 
     txnouttype whichType;
     if (!Solver(keystore, fromPubKey, hash, nHashType, txin.scriptSig, whichType))
@@ -114,6 +142,8 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
         // Recompute txn hash using subscript in place of scriptPubKey:
         uint256 hash2 = SignatureHash(subscript, txTo, nIn, nHashType);
 
+        if (printHash) { std::cout << "signrawtransaction p2sh hash: " << hash2.GetReverseHex() << std::endl; }
+
         txnouttype subType;
         bool fSolved =
             Solver(keystore, subscript, hash2, nHashType, txin.scriptSig, subType) && subType != TX_SCRIPTHASH;
@@ -126,14 +156,14 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
     return VerifyScript(txin.scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&txTo, nIn));
 }
 
-bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
+bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType, bool printHash)
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
-    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, nHashType);
+    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, nHashType, printHash);
 }
 
 static CScript PushAll(const vector<valtype>& values)

@@ -225,6 +225,8 @@ public:
     friend inline bool operator==(const base_uint& a, uint64_t b) { return a.EqualTo(b); }
     friend inline bool operator!=(const base_uint& a, uint64_t b) { return !a.EqualTo(b); }
 
+    std::string GetReverseHex() const;
+    void Reverse(base_uint& result) const;
     std::string GetHex() const;
     void SetHex(const char* psz);
     void SetHex(const std::string& str);

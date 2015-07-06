@@ -150,6 +150,22 @@ double base_uint<BITS>::getdouble() const
     return ret;
 }
 
+// S.M. Added reversing convenience methods
+template <unsigned int BITS>
+std::string base_uint<BITS>::GetReverseHex() const
+{
+    char psz[sizeof(pn)*2 + 1];
+    for (unsigned int i = 0; i < sizeof(pn); i++)
+        sprintf(psz + i*2, "%02x", ((unsigned char*)pn)[i]);
+    return std::string(psz, psz + sizeof(pn)*2);
+}
+
+template <unsigned int BITS>
+void base_uint<BITS>::Reverse(base_uint& result) const
+{
+    result.SetHex(this->GetReverseHex());
+}
+
 template <unsigned int BITS>
 std::string base_uint<BITS>::GetHex() const
 {
@@ -226,6 +242,8 @@ template base_uint<160>& base_uint<160>::operator/=(const base_uint<160>& b);
 template int base_uint<160>::CompareTo(const base_uint<160>&) const;
 template bool base_uint<160>::EqualTo(uint64_t) const;
 template double base_uint<160>::getdouble() const;
+template std::string base_uint<160>::GetReverseHex() const;
+template void base_uint<160>::Reverse(base_uint& result) const;
 template std::string base_uint<160>::GetHex() const;
 template std::string base_uint<160>::ToString() const;
 template void base_uint<160>::SetHex(const char*);
@@ -243,6 +261,8 @@ template base_uint<256>& base_uint<256>::operator/=(const base_uint<256>& b);
 template int base_uint<256>::CompareTo(const base_uint<256>&) const;
 template bool base_uint<256>::EqualTo(uint64_t) const;
 template double base_uint<256>::getdouble() const;
+template std::string base_uint<256>::GetReverseHex() const;
+template void base_uint<256>::Reverse(base_uint& result) const;
 template std::string base_uint<256>::GetHex() const;
 template std::string base_uint<256>::ToString() const;
 template void base_uint<256>::SetHex(const char*);
